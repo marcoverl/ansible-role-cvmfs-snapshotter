@@ -1,0 +1,81 @@
+---
+- name: Base setup
+  command: 'cvmfs_config setup'
+  
+- name: Build default.local file
+  template:
+    src: default.local.j2
+    dest: /etc/cvmfs/default.local
+    
+- name: replace lines in default.local
+  when: ansible_facts.getent_passwd is defined and ansible_os_family != "RedHat"
+  lineinfile: 
+    path: /etc/cvmfs/default.local
+    regexp: '{{item.from}}' 
+    line: '{{item.to}}'
+    firstmatch: yes
+  with_items:
+  - { from: '^(.*)CVMFS_USER(.*)$', to: 'CVMFS_USER={{ ansible_facts.getent_passwd.keys() | first }}' }
+
+- name: Copy preconfigured config.d file
+  template:
+    src: cern-egi-repos.conf.j2
+    dest: '/etc/cvmfs/config.d/{{ repository_name }}.conf'
+
+- name: Build repository config.d file
+  template:
+    src: repository.conf.j2
+    dest: '/etc/cvmfs/config.d/{{ repository_name }}.conf'
+  loop: "{{ repos|default([]) }}"
+  when: item == repository_name
+
+- name: Create public key path
+  file:
+    path: '{{cvmfs_public_key_path}}'
+    state: directory
+
+- name: Copy public key
+  copy:
+    src: '{{ repository_name }}.pub'
+    dest: '{{cvmfs_public_key_path}}/{{cvmfs_public_key}}'
+  loop: "{{ repos|default([]) }}"
+  when: item == repository_name
+
+- name: '[VM] Restart autofs'
+  service:
+    name: autofs
+    state: restarted
+  when: ansible_virtualization_type != "docker"
+
+#________________________________
+# Check configuration
+
+- name: '[VM] Check config'
+  command: 'cvmfs_config chksetup'
+  register: chksetup_output
+  when: ansible_virtualization_type != "docker"
+
+- fail:
+    msg: 'cvmfs_config chksetup fail!'
+  when:
+    - chksetup_output.stdout is defined
+    - chksetup_output.rc != 0
+
+#________________________________
+# Mount cvmfs
+
+- name: '[VM] mount cvmfs using cvmfs_config probe'
+  include_tasks: probe.yml
+  when:
+  - cvmfs_mountpoint == '/cvmfs'
+  - ansible_virtualization_type != "docker"
+
+- name: '[VM] mount cvmfs manually'
+  include_tasks: mount.yml
+  when:
+    - cvmfs_mountpoint != '/cvmfs'
+    - ansible_virtualization_type != "docker"
+
+- name: '[Docker] mount cvmfs'
+  include_tasks: mount.yml
+  when: ansible_virtualization_type == "docker"

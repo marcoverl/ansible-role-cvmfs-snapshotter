@@ -1,0 +1,22 @@
+---
+# defaults file for cvmfs-snapshotter
+
+server_url: 'rgw.cloud.infn.it:443/cvmfs' 
+
+repository_name: 'unpacked.infn.it'
+
+cvmfs_server_url: 'https://{{ server_url }}/{{ repository_name }}'
+
+cvmfs_public_key_path: '/etc/cvmfs/keys/infn.it'
+
+cvmfs_public_key: '{{ repository_name }}.pub'
+
+cvmfs_http_proxy: 'DIRECT'
+
+cvmfs_mountpoint: '/cvmfs'
+
+add_fstab_entry: true
+
+snapshotter: false
+
+snapshotter_path: '/usr/local/share'

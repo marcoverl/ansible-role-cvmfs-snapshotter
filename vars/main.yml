@@ -1,0 +1,7 @@
+---
+# vars file for cvmfs-snapshotter
+snapshotter_version: '0fb8064'
+repos:
+  - unpacked.infn.it
+  - datacloud.infn.it
+  - sw.cta-observatory.org

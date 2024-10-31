@@ -1,0 +1,22 @@
+---
+- name: Get uid 1000 user info
+  getent:
+    database: passwd
+    key: '1000'
+    fail_key: false
+- debug:
+    var: ansible_facts.getent_passwd
+  
+- name: Create the cvmfs user with UID 1000 if it doesn't exist
+  user:
+    name: cvmfs
+    uid: 1000
+    group: users
+    state: present
+  when: ansible_facts.getent_passwd is not defined
+    
+- include_tasks: client_install_redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- include_tasks: client_install_debian.yml
+  when: ansible_os_family == "Debian"

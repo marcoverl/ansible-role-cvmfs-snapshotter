@@ -1,0 +1,70 @@
+---
+- name: Creates directory
+  file:
+    path: /etc/containerd-cvmfs-grpc
+    state: directory
+
+- name: Copy config files
+  copy: src={{ item.src }} dest={{ item.dest }} remote_src=yes
+  with_items:
+  - { src: '{{snapshotter_path}}/cvmfs-devel/snapshotter/script/config/etc/containerd-cvmfs-grpc/config.toml', dest: '/etc/containerd-cvmfs-grpc/config.toml' }
+  - { src: '{{snapshotter_path}}/cvmfs-devel/snapshotter/script/config/etc/systemd/system/cvmfs-snapshotter.service', dest: '/etc/systemd/system/cvmfs-snapshotter.service' }
+  
+- name: Delete directories and go cache
+  file:
+    path: '{{snapshotter_path}}/{{item}}'
+    state: absent
+  with_items:
+  - cvmfs-devel
+  - nerdctl
+- command: /snap/bin/go clean -modcache
+
+- name: replace lines in containerd-cvmfs-grpc config.toml
+  lineinfile: 
+    path: /etc/containerd-cvmfs-grpc/config.toml 
+    regexp: '{{item.from}}' 
+    line: '{{item.to}}'
+    firstmatch: yes
+  with_items:
+  - { from: '^(.*)repository(.*)$', to: 'repository = "{{repository_name}}"' }
+
+- name: Ensure the directory /etc/containerd exists
+  file:
+    path: /etc/containerd
+    state: directory
+    
+- name: Touch file
+  file:
+    path: /etc/containerd/config.toml
+    state: touch
+
+- name: replace lines in containerd config.toml
+  lineinfile: 
+    path: /etc/containerd/config.toml 
+    regexp: '{{item.from}}' 
+    line: '{{item.to}}'
+    firstmatch: yes
+  with_items:
+  - { from: '^(.*)disable_snapshot_annotations(.*)$', to: 'disable_snapshot_annotations = false' }
+  - { from: '^(.*)snapshotter(.*)$', to: 'snapshotter = "cvmfs-snapshotter"' }
+
+- name: insert lines in containerd config.toml
+  blockinfile:
+    path: /etc/containerd/config.toml
+    insertafter: '^(.*)\[proxy_plugins\](.*)$'
+    block: |
+      [proxy_plugins.cvmfs-snapshotter]
+       type = "snapshot"
+       address = "/run/containerd-cvmfs-grpc/containerd-cvmfs-grpc.sock"
+
+- name: enable the snapshotter
+  systemd:
+    name: cvmfs-snapshotter
+    state: started
+    enabled: yes
+
+- name: restart containerd
+  systemd:
+    name: containerd
+    state: restarted
+

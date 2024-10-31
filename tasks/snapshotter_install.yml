@@ -1,0 +1,6 @@
+---
+- include_tasks: snapshotter_install_redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- include_tasks: snapshotter_install_debian.yml
+  when: ansible_os_family == "Debian"

@@ -1,0 +1,25 @@
+galaxy_info:
+  role_name: cvmfs-snapshotter
+  author: Marco Verlato
+  description: Ansible role to setup a CernVM-FS client with or w/o its containerd snapshotter
+  company: INFN
+  license: Apache
+  min_ansible_version: 2.0
+  platforms:
+  - name: Debian
+    versions:
+    - bookworm
+  - name: Ubuntu
+    versions:
+    - jammy
+    - focal
+  - name: EL
+    versions:
+    - 7
+    - 8
+    - 9
+  galaxy_tags:
+    - cvmfs
+    - filesystem
+    - snapshotter
+dependencies: []

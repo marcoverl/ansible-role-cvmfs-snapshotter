@@ -1,0 +1,34 @@
+---
+- name: Create mountpoint
+  file:
+    path: '{{ item }}'
+    state: directory
+  with_items:
+    - '{{ cvmfs_mountpoint }}'
+    - '{{ cvmfs_mountpoint }}/{{ repository_name }}'
+
+#- name: Mount cmvfs to {{ cvmfs_mountpoint }}
+#  command : 'mount -t cvmfs {{ repository_name }} {{ cvmfs_mountpoint }}/{{ repository_name }}'
+#  register: mount_output
+
+- name: Add fstab entry
+  mount:
+    path: '{{ cvmfs_mountpoint }}/{{ repository_name }}'
+    src: '{{ repository_name }}'
+    fstype: cvmfs
+    opts: defaults,_netdev,nodev
+    state: mounted
+  when:
+    - add_fstab_entry|bool and ansible_version.full >= "2.3.0.0"
+    - ansible_virtualization_type != "docker"
+
+- name: Add fstab entry
+  mount:
+    name: '{{ cvmfs_mountpoint }}/{{ repository_name }}'
+    src: '{{ repository_name }}'
+    fstype: cvmfs
+    opts: defaults,_netdev,nodev
+    state: mounted
+  when:
+    - add_fstab_entry|bool and ansible_version.full < "2.3.0.0"
+    - ansible_virtualization_type != "docker"

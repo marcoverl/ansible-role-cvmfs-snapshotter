@@ -1,0 +1,9 @@
+---
+- name: '[Debian] Install cmvfs client repository'
+  apt:
+    deb: https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest_all.deb
+
+- name: '[Debian] Install cvmfs client'
+  apt:
+    name: ['cvmfs', 'cvmfs-config-default']
+    update_cache: yes

@@ -1,0 +1,8 @@
+---
+- name: Mount cvmfs to /cvmfs
+  command: 'cvmfs_config probe'
+  register: probe_output
+
+- fail:
+    msg: 'cvmfs_config probe failed to probe {{repository_name}}!'
+  when: probe_output.stdout != 'Probing /cvmfs/' + repository_name + '... OK'

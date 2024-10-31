@@ -1,0 +1,8 @@
+CVMFS_SERVER_URL={{ cvmfs_server_url }} 
+CVMFS_PUBLIC_KEY={{ cvmfs_public_key_path }}/{{ cvmfs_public_key }}
+CVMFS_HTTP_PROXY="{{ cvmfs_http_proxy }}"
+{% if ansible_os_family == 'Debian' %}
+X509_CERT_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+{% else %}
+X509_CERT_BUNDLE=/etc/pki/tls/certs/ca-bundle.crt
+{% endif %}

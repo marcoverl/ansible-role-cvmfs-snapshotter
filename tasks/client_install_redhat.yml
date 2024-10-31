@@ -1,0 +1,12 @@
+---
+- name: '[EL] Install cvmfs repository'
+  yum:
+    name: 'https://ecsft.cern.ch/dist/cvmfs/cvmfs-release/cvmfs-release-latest.noarch.rpm'
+    state: present
+    disable_gpg_check: true
+
+- name: '[EL] Install cvmfs client'
+  yum:
+    name: ['cvmfs', 'cvmfs-config-default']
+    update_cache: yes
+    state: present

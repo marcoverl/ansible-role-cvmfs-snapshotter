@@ -35,7 +35,10 @@
 
 - debug:
     msg: "Version: {{ q.stdout }}"
-
+  when:
+    - repository_name != ""
+    - snapshotter|bool
+    
 - include_tasks: snapshotter_install.yml
   name: Installing snapshotter
   when: 

@@ -1,0 +1,23 @@
+name: Push to Galaxy
+
+on:
+  push:
+    tags: 
+    - "*"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          path: "${{ github.repository }}"
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: galaxy
+        uses: robertdebock/galaxy-action@1.2.1
+        with:
+          galaxy_api_key: ${{ secrets.galaxy_api_key }}
+          git_branch: ${{ github.ref_name }}

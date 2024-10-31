@@ -19,11 +19,11 @@
   stat:
     path: /usr/local/bin/nerdctl
   register: ndctl
-    
-- name: Clone git repositories
+
+- name: Clone git repository
   git: repo={{ item.repo }} dest={{ item.dest }} clone=yes version={{item.version}}
   with_items:
-    - { repo: "https://github.com/containerd/nerdctl", dest: "{{snapshotter_path}}/nerdctl", version: "v1.7.7", depth: 1 }
+    - { repo: "https://github.com/containerd/nerdctl", dest: "{{snapshotter_path}}/nerdctl", version: "{{nerdctl_version}}", depth: 1 }
   when: not ndctl.stat.exists
 
 - name: Download and unarchive cvmfs-devel
@@ -31,6 +31,14 @@
     src: https://github.com/cvmfs/cvmfs/archive/refs/heads/devel.zip
     dest: "{{snapshotter_path}}"
     remote_src: yes
+  ignore_errors: yes
+  register: dldunarc
+
+- name: Clone git repository
+  git: repo={{ item.repo }} dest={{ item.dest }} clone=yes version={{item.version}}
+  with_items:
+    - { repo: "https://github.com/cvmfs/cvmfs", dest: "{{snapshotter_path}}/cvmfs-devel", version: "{{snapshotter_version}}", depth: 1 }
+  when: dldunarc.rc != 0
   
 - name: Build snapshotter 
   command: make chdir={{snapshotter_path}}/cvmfs-devel/snapshotter
@@ -38,7 +46,7 @@
     PATH: /snap/bin:{{ ansible_env.PATH }}
     PREFIX: "/usr/local/bin/"
     VERSION: "{{snapshotter_version}}"
-    
+
 - name: Build nerdctl
   command: make chdir={{snapshotter_path}}/nerdctl
   environment: 

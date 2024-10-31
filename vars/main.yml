@@ -1,6 +1,7 @@
 ---
 # vars file for cvmfs-snapshotter
-snapshotter_version: '0fb8064'
+snapshotter_version: 'devel'
+nerdctl_version: 'v1.7.7'
 repos:
   - unpacked.infn.it
   - datacloud.infn.it

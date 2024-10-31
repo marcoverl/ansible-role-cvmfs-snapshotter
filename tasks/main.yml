@@ -25,6 +25,13 @@
     - repository_name != ""
     - cvmfs_stat.rc != 0
 
+- command: 'containerd --version'
+  name: Check if containerd is present before installing the snapshotter  
+  ignore_errors: no
+  when: 
+    - repository_name != ""
+    - snapshotter|bool
+
 - include_tasks: snapshotter_install.yml
   name: Installing snapshotter
   when: 

@@ -13,7 +13,7 @@
     - repository_name != ""
     - p.stat.isdir is not defined
 
-- command: 'cvmfs_config stat -v {{ repository_name}}'
+- command: 'cvmfs_config stat -v {{ repository_name }}'
   name: Pre-configuring client
   register: cvmfs_stat
   ignore_errors: yes
@@ -28,9 +28,13 @@
 - command: 'containerd --version'
   name: Check if containerd is present before installing the snapshotter  
   ignore_errors: no
+  register: q
   when: 
     - repository_name != ""
     - snapshotter|bool
+
+- debug:
+    msg: "Version: {{ q.stdout }}"
 
 - include_tasks: snapshotter_install.yml
   name: Installing snapshotter

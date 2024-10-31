@@ -1,52 +1,42 @@
 ---
 # tasks file for cvmfs-snapshotter
 
-- name: Skip installation of cvmfs if repository_name is empty or /cvmfs path exists
-  stat:
-    path: /cvmfs
-  register: p
+- name: Installing and/or configuring cvmfs with or w/o snapshotter
   when: repository_name != ""
-  
-- include_tasks: client_install.yml
-  name: Installing client
-  when: 
-    - repository_name != ""
-    - p.stat.isdir is not defined
+  block:
+    - name: Skip installation of cvmfs if repository_name is empty or /cvmfs path exists
+      stat:
+        path: /cvmfs
+      register: p
 
-- command: 'cvmfs_config stat -v {{ repository_name }}'
-  name: Pre-configuring client
-  register: cvmfs_stat
-  ignore_errors: yes
-  when: repository_name != ""
+    - include_tasks: client_install.yml
+      name: Installing client
+      when: p.stat.isdir is not defined
 
-- include_tasks: client_config.yml
-  name: Configuring client
-  when:
-    - repository_name != ""
-    - cvmfs_stat.rc != 0
+    - command: 'cvmfs_config stat -v {{ repository_name }}'
+      name: Pre-configuring client
+      register: cvmfs_stat
+      ignore_errors: yes
 
-- command: 'containerd --version'
-  name: Check if containerd is present before installing the snapshotter  
-  ignore_errors: no
-  register: q
-  when: 
-    - repository_name != ""
-    - snapshotter|bool
+    - include_tasks: client_config.yml
+      name: Configuring client
+      when: cvmfs_stat.rc != 0
 
-- debug:
-    msg: "Version: {{ q.stdout }}"
-  when:
-    - repository_name != ""
-    - snapshotter|bool
-    
-- include_tasks: snapshotter_install.yml
-  name: Installing snapshotter
-  when: 
-    - repository_name != ""
-    - snapshotter|bool
+    - command: 'containerd --version'
+      name: Check if containerd is present before installing the snapshotter
+      ignore_errors: no
+      register: q
+      when: snapshotter|bool
 
-- include_tasks: snapshotter_config.yml
-  name: Configuring snapshotter
-  when: 
-    - repository_name != ""
-    - snapshotter|bool
+    - name: Show containerd version
+      debug:
+        msg: "Version: {{q.stdout}}"
+      when: snapshotter|bool
+
+    - include_tasks: snapshotter_install.yml
+      name: Installing snapshotter
+      when: snapshotter|bool
+
+    - include_tasks: snapshotter_config.yml
+      name: Configuring snapshotter
+      when: snapshotter|bool
